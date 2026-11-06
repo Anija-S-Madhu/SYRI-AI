@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}SYRI AI | Your Money. Your Intelligence.{% endblock %}
+
+{% block content %}
+
+<div class="landing-page">
+
+
+    <nav class="landing-nav">
+        <a href="/" class="brand">SYRI<span>AI</span></a>
+
+        <div class="nav-actions">
+            <a href="{{ url_for('main.login') }}" class="nav-login">Login</a>
+            <a href="{{ url_for('main.register') }}" class="nav-register">Get Started</a>
+        </div>
+    </nav>
+
+    <section class="hero">
+
+        <div class="hero-badge">
+            ✦ YOUR PERSONAL AI FINANCIAL COMPANION
+        </div>
+
+        <h1>
+            Your Money.<br>
+            <span>Your Intelligence.</span>
+        </h1>
+
+        <p>
+            Take control of your financial future with intelligent insights,
+            smart budgeting and AI-powered financial decisions.
+        </p>
+
+        <div class="hero-buttons">
+            <a href="{{ url_for('main.register') }}" class="primary-btn">
+                Get Started →
+            </a>
+
+            <a href="{{ url_for('main.login') }}" class="secondary-btn">
+                Sign In
+            </a>
+        </div>
+
+        <div class="hero-footer">
+            <span>✦ Smart Financial Analysis</span>
+            <span>✦ AI-Powered Insights</span>
+            <span>✦ Personal Finance Intelligence</span>
+        </div>
+
+    </section>
+
+    <footer class="landing-footer">
+        SYRI AI © 2026 · YOUR MONEY. YOUR INTELLIGENCE.
+    </footer>
+
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,663 @@
+{% extends "base.html" %}
+
+{% block title %}Financial Analytics & AI Intelligence | SYRI AI{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+
+    <header class="dashboard-header">
+        <div>
+            <h1>Financial Analytics & AI Intelligence</h1>
+            <p>Data-driven forecasts powered by Scikit-learn & Gnani AI</p>
+        </div>
+
+        <div class="header-nav">
+            <a href="{{ url_for('main.dashboard') }}" class="secondary-btn">Dashboard</a>
+            <a href="{{ url_for('main.transactions') }}" class="secondary-btn">Transactions</a>
+            <a href="{{ url_for('main.categories') }}" class="secondary-btn">Categories</a>
+            <a href="{{ url_for('main.budgets') }}" class="secondary-btn">Budgets</a>
+            <a href="{{ url_for('main.reports') }}" class="secondary-btn">Reports</a>
+            <a href="{{ url_for('main.logout') }}" class="logout-btn">Logout</a>
+        </div>
+    </header>
+
+    {% if advisory.ml_predictions.cold_start %}
+    <div class="alert info" style="margin-bottom: 24px;">
+        ✦ <strong>Cold-Start Notice:</strong> You currently have {{ advisory.financial_summary.transaction_count }}
+        recorded transaction(s).
+        Personalized time-series forecasting activates once you record at least 5–10 transactions.
+        Currently displaying baseline trajectory and benchmark personal finance modeling.
+    </div>
+    {% endif %}
+
+    {% if advisory.ml_predictions.unusual_transactions %}
+    <div class="alert error" style="margin-bottom: 24px;">
+        🚨 <strong>Noticeable Expense Alert:</strong>
+        {% for a in advisory.ml_predictions.unusual_transactions %}
+        <div style="margin-top: 4px; font-size: 13px;">
+            • <strong>{{ a.category }}</strong>: ₹{{ "%.2f"|format(a.amount) }} on {{ a.date }} ({{ a.description }}) —
+            higher than typical spending patterns.
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- ML Forecast & Behavioral Analysis Cards -->
+    <section class="dashboard-cards">
+        <div class="dashboard-card">
+            <h3>Forecasted Next Month Expense</h3>
+            <p>₹{{ "%.2f"|format(advisory.ml_predictions.forecasted_next_month_expense) }}</p>
+            <span>Estimated based on your historical daily velocity</span>
+        </div>
+
+        <div class="dashboard-card">
+            <h3>Spending Pattern</h3>
+            <p style="font-size: 22px;">{{ advisory.ml_predictions.spending_behavior }}</p>
+            <span>Financial health indicator</span>
+        </div>
+
+        <div class="dashboard-card">
+            <h3>Savings Rate</h3>
+            <p
+                style="color: {% if advisory.ml_predictions.savings_rate_percent >= 20 %}var(--green){% else %}var(--text){% endif %};">
+                {{ advisory.ml_predictions.savings_rate_percent }}%
+            </p>
+            <span>Net savings / Total income</span>
+        </div>
+
+        <div class="dashboard-card">
+            <h3>Total Tracked Volume</h3>
+            <p>₹{{ "%.2f"|format(advisory.financial_summary.historical_expense) }}</p>
+            <span>{{ advisory.financial_summary.transaction_count }} recorded expense(s)</span>
+        </div>
+    </section>
+
+    <!-- Gnani AI Contextualized Intelligence Card -->
+    <section class="dashboard-section" style="border-left: 5px solid var(--primary);">
+        <div
+            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
+            <h2>✦ AI Financial Advisory</h2>
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <span class="budget-badge status-normal"
+                    style="background: rgba(156, 137, 184, 0.18); color: var(--primary-dark); border-color: var(--border);">
+                    Source: {{ advisory.gnani_explanation.source }}
+                </span>
+                <button type="button" id="retrain-ml-btn" class="secondary-btn"
+                    style="padding: 6px 14px; font-size: 12px;">
+                    ↻ Retrain ML Model
+                </button>
+            </div>
+        </div>
+
+        <div id="retrain-feedback" class="alert success" style="display: none; margin-bottom: 15px;"></div>
+
+        <div
+            style="background: var(--surface-light); padding: 20px; border-radius: 12px; line-height: 1.8; font-size: 14px; color: var(--text); white-space: pre-line;">
+            {{ advisory.gnani_explanation.text }}
+        </div>
+    </section>
+
+    <!-- Interactive AI Financial Assistant Q&A -->
+    <section class="dashboard-section">
+        <div
+            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
+            <h2 style="margin: 0;">Ask SYRI AI Assistant</h2>
+            <div style="display: flex; gap: 6px; font-size: 11px;">
+                <span class="budget-badge"
+                    style="background: rgba(101, 140, 120, 0.12); color: #3d6350; border: 1px solid rgba(101, 140, 120, 0.3);">🎙️
+                    Prisma STT</span>
+                <span class="budget-badge"
+                    style="background: rgba(156, 137, 184, 0.18); color: var(--primary-dark); border: 1px solid var(--border);">🧠
+                    Evon 30B</span>
+                <span class="budget-badge"
+                    style="background: rgba(224, 159, 62, 0.15); color: #9a6519; border: 1px solid rgba(224, 159, 62, 0.3);">🔊
+                    Timbre TTS</span>
+            </div>
+        </div>
+        <p style="margin-bottom: 16px; color: var(--muted); font-size: 13px;">Ask questions about your finances in
+            natural language (English, Malayalam, and Indian languages supported).</p>
+
+        <form id="ai-chat-form" style="display: flex; gap: 12px; margin-bottom: 20px; align-items: center;">
+            <input type="text" id="ai-question-input"
+                placeholder="e.g., How much did I spend on food? What is my balance? / എന്റെ ചിലവ് എത്രയാണ്?" required
+                style="flex: 1; padding: 14px 16px; border-radius: 10px; border: 1px solid var(--border); background: #FCF9FC;">
+            <button type="button" id="voice-record-btn" class="secondary-btn"
+                title="Speak your question using Gnani Prisma STT + Evon 30B + Timbre TTS"
+                style="padding: 12px 16px; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; border: 1px solid var(--border);">
+                <span id="voice-record-icon">🎤</span> <span id="voice-record-label">Voice</span>
+            </button>
+            <button type="submit" id="ai-ask-btn" class="primary-btn" style="padding: 0 24px; height: 48px;">
+                Ask Assistant
+            </button>
+        </form>
+
+        <div id="ai-response-box"
+            style="display: none; background: #FFFFFF; border: 1px solid var(--border); border-radius: 12px; padding: 18px; margin-top: 14px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <div style="font-size: 12px; color: var(--muted);" id="ai-response-meta">Answer from SYRI AI:</div>
+                <button type="button" id="voice-listen-btn" class="secondary-btn"
+                    style="display: none; font-size: 12px; padding: 4px 10px; border-radius: 6px;">
+                    🔊 Listen
+                </button>
+            </div>
+            <div id="ai-response-text" style="font-size: 14px; line-height: 1.6; color: var(--text);"></div>
+            <div id="voice-status-msg" style="display: none; font-size: 12px; margin-top: 8px; color: var(--muted);">
+            </div>
+        </div>
+    </section>
+
+    <!-- Visualizations: Chart.js and Budget Overrun Risk -->
+    <section class="dashboard-section">
+        <h2>Category Spending & Budget Overrun Forecast</h2>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start;">
+            <!-- Chart.js Container -->
+            <div
+                style="background: white; padding: 20px; border-radius: 14px; border: 1px solid var(--border); text-align: center;">
+                <h3 style="font-size: 15px; margin-bottom: 14px; color: var(--text);">Category Distribution</h3>
+                <div style="max-width: 320px; margin: 0 auto; position: relative;">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Overrun Risk Table -->
+            <div style="background: white; padding: 20px; border-radius: 14px; border: 1px solid var(--border);">
+                <h3 style="font-size: 15px; margin-bottom: 14px; color: var(--text);">Budget Overrun Risk Projection
+                </h3>
+                {% if advisory.ml_predictions.budget_overrun_risks %}
+                <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                    <thead>
+                        <tr style="border-bottom: 1px solid var(--border); text-align: left;">
+                            <th style="padding: 8px 6px;">Category</th>
+                            <th style="padding: 8px 6px;">Budget</th>
+                            <th style="padding: 8px 6px;">Projected</th>
+                            <th style="padding: 8px 6px;">Risk</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in advisory.ml_predictions.budget_overrun_risks %}
+                        <tr style="border-bottom: 1px solid rgba(156, 137, 184, 0.1);">
+                            <td style="padding: 10px 6px; font-weight: 600;">{{ item.category }}</td>
+                            <td style="padding: 10px 6px;">₹{{ "%.2f"|format(item.budget) }}</td>
+                            <td
+                                style="padding: 10px 6px; color: {% if item.overrun_likely %}var(--red){% else %}var(--green){% endif %}; font-weight: 700;">
+                                ₹{{ "%.2f"|format(item.projected_total) }}
+                            </td>
+                            <td style="padding: 10px 6px;">
+                                {% if item.overrun_likely %}
+                                <span class="budget-badge status-overspent">🚨 High Risk</span>
+                                {% else %}
+                                <span class="budget-badge status-normal">✦ Safe</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p style="color: var(--muted); font-size: 13px;">No monthly budgets set yet. <a
+                        href="{{ url_for('main.budgets') }}"
+                        style="color: var(--primary-dark); text-decoration: underline;">Create a budget</a> to enable
+                    overrun forecasting.</p>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+
+</div>
+
+<!-- Chart.js from CDN with robust local fallback -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // 1. Render Category Doughnut Chart
+        const ctx = document.getElementById('categoryChart');
+        if (ctx && typeof Chart !== 'undefined') {
+            const labels = {{ category_labels|tojson }};
+            const dataValues = {{ category_values|tojson }};
+
+    const pastelPalette = ['#9C89B8', '#F0A6CA', '#EFC3E6', '#B8BEDD', '#658C78', '#E09F3E', '#F0E6EF'];
+
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels.length ? labels : ['No Expense Data'],
+            datasets: [{
+                data: dataValues.length ? dataValues : [1],
+                backgroundColor: labels.length ? pastelPalette.slice(0, labels.length) : ['#E0E0E0'],
+                borderWidth: 2,
+                borderColor: '#FFFFFF'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { boxWidth: 12, font: { family: 'Inter', size: 11 } }
+                }
+            }
+        }
+    });
+    }
+
+    // 2. Interactive AI Assistant Q&A
+    const chatForm = document.getElementById('ai-chat-form');
+    const qInput = document.getElementById('ai-question-input');
+    const askBtn = document.getElementById('ai-ask-btn');
+    const box = document.getElementById('ai-response-box');
+    const meta = document.getElementById('ai-response-meta');
+    const text = document.getElementById('ai-response-text');
+
+    if (chatForm) {
+        chatForm.addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const q = qInput.value.trim();
+            if (!q) return;
+
+            askBtn.disabled = true;
+            askBtn.textContent = 'Thinking...';
+            box.style.display = 'block';
+            text.textContent = 'Analyzing your financial records...';
+
+            try {
+                const res = await fetch('/api/ai/ask', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ question: q })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    meta.textContent = `Response (${data.source || 'SYRI AI'}):`;
+                    text.textContent = data.answer || 'No response returned.';
+                    if (listenBtn && data.answer) {
+                        listenBtn.style.display = 'inline-block';
+                        listenBtn.textContent = '🔊 Listen';
+                        listenBtn.disabled = false;
+                    }
+                } else {
+                    text.textContent = data.error || 'Failed to get answer.';
+                    if (listenBtn) listenBtn.style.display = 'none';
+                }
+            } catch (err) {
+                text.textContent = 'Network error. Please try again.';
+                if (listenBtn) listenBtn.style.display = 'none';
+            } finally {
+                askBtn.disabled = false;
+                askBtn.textContent = 'Ask Assistant';
+            }
+        });
+    }
+
+    // Voice Input (Gnani Prisma STT) & Voice Output (Gnani Timbre TTS)
+    const voiceRecordBtn = document.getElementById('voice-record-btn');
+    const voiceRecordLabel = document.getElementById('voice-record-label');
+    const voiceRecordIcon = document.getElementById('voice-record-icon');
+    const listenBtn = document.getElementById('voice-listen-btn');
+    const voiceStatus = document.getElementById('voice-status-msg');
+
+    let audioContext = null;
+    let audioWorkletNode = null;
+    let micStream = null;
+    let pcmBuffers = [];
+    let isRecording = false;
+    let currentAudio = null;
+    let currentAudioUrl = null;
+
+    function encodeWAV(samples, sampleRate) {
+        const buffer = new ArrayBuffer(44 + samples.length * 2);
+        const view = new DataView(buffer);
+
+        /* RIFF identifier */
+        function writeString(view, offset, string) {
+            for (let i = 0; i < string.length; i++) {
+                view.setUint8(offset + i, string.charCodeAt(i));
+            }
+        }
+
+        writeString(view, 0, 'RIFF');
+        view.setUint32(4, 36 + samples.length * 2, true);
+        writeString(view, 8, 'WAVE');
+        writeString(view, 12, 'fmt ');
+        view.setUint32(16, 16, true);
+        view.setUint16(20, 1, true); /* PCM */
+        view.setUint16(22, 1, true); /* Mono */
+        view.setUint32(24, sampleRate, true);
+        view.setUint32(28, sampleRate * 2, true);
+        view.setUint16(32, 2, true); /* block align */
+        view.setUint16(34, 16, true); /* 16-bit */
+        writeString(view, 36, 'data');
+        view.setUint32(40, samples.length * 2, true);
+
+        let offset = 44;
+        for (let i = 0; i < samples.length; i++) {
+            let s = Math.max(-1, Math.min(1, samples[i]));
+            view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+            offset += 2;
+        }
+
+        return new Blob([view], { type: 'audio/wav' });
+    }
+
+    if (voiceRecordBtn) {
+        voiceRecordBtn.addEventListener('click', async function () {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                alert('Audio recording is not supported in this browser environment.');
+                return;
+            }
+
+            if (!isRecording) {
+                try {
+                    micStream = await navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1, sampleRate: 16000 } });
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
+                    const source = audioContext.createMediaStreamSource(micStream);
+
+                    // Create ScriptProcessorNode (bufferSize: 4096, 1 input channel, 1 output channel)
+                    const processor = audioContext.createScriptProcessor(4096, 1, 1);
+                    pcmBuffers = [];
+
+                    processor.onaudioprocess = function (e) {
+                        if (!isRecording) return;
+                        const channelData = e.inputBuffer.getChannelData(0);
+                        pcmBuffers.push(new Float32Array(channelData));
+                    };
+
+                    source.connect(processor);
+                    processor.connect(audioContext.destination);
+
+                    isRecording = true;
+                    voiceRecordIcon.textContent = '⏹';
+                    voiceRecordLabel.textContent = 'Stop';
+                    voiceRecordBtn.style.borderColor = 'var(--red, #e53e3e)';
+                    if (voiceStatus) {
+                        voiceStatus.style.display = 'block';
+                        voiceStatus.textContent = 'Listening... Speak your question, then click Stop.';
+                    }
+                } catch (err) {
+                    alert('Microphone access denied or unavailable: ' + err.message);
+                }
+            } else {
+                isRecording = false;
+                voiceRecordBtn.style.borderColor = 'var(--border)';
+                voiceRecordBtn.disabled = true;
+                voiceRecordLabel.textContent = 'Processing...';
+                if (voiceStatus) {
+                    voiceStatus.style.display = 'block';
+                    voiceStatus.textContent = 'Processing with Gnani AI (Prisma STT → Evon 30B → Timbre TTS)...';
+                }
+
+                // Stop mic tracks
+                if (micStream) {
+                    micStream.getTracks().forEach(track => track.stop());
+                }
+
+                // Calculate total length & flatten PCM buffers
+                let totalLength = 0;
+                for (let i = 0; i < pcmBuffers.length; i++) {
+                    totalLength += pcmBuffers[i].length;
+                }
+                const merged = new Float32Array(totalLength);
+                let offset = 0;
+                for (let i = 0; i < pcmBuffers.length; i++) {
+                    merged.set(pcmBuffers[i], offset);
+                    offset += pcmBuffers[i].length;
+                }
+
+                const actualSampleRate = audioContext ? audioContext.sampleRate : 16000;
+                if (audioContext && audioContext.state !== 'closed') {
+                    audioContext.close();
+                }
+
+                if (totalLength === 0) {
+                    voiceRecordBtn.disabled = false;
+                    voiceRecordIcon.textContent = '🎤';
+                    voiceRecordLabel.textContent = 'Voice';
+                    if (voiceStatus) voiceStatus.textContent = 'No audio captured.';
+                    return;
+                }
+
+                const wavBlob = encodeWAV(merged, actualSampleRate);
+                const formData = new FormData();
+                formData.append('audio_file', wavBlob, 'recording.wav');
+
+                try {
+                    // Unified endpoint chaining Prisma STT -> Evon 30B reasoning -> Timbre TTS
+                    const res = await fetch('/api/ai/voice/ask', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const result = await res.json();
+                    if (res.ok) {
+                        const transcriptText = (result.transcript || '').trim();
+                        if (transcriptText) {
+                            qInput.value = transcriptText;
+                        }
+
+                        if (result.answer) {
+                            box.style.display = 'block';
+                            text.textContent = result.answer;
+                            meta.textContent = `Response (${result.source || 'Gnani Evon 30B'}):`;
+
+                            // If Timbre audio was returned, play it directly
+                            if (result.audio_base64) {
+                                try {
+                                    const binaryString = window.atob(result.audio_base64);
+                                    const bytes = new Uint8Array(binaryString.length);
+                                    for (let i = 0; i < binaryString.length; i++) {
+                                        bytes[i] = binaryString.charCodeAt(i);
+                                    }
+                                    const audioBlob = new Blob([bytes.buffer], { type: 'audio/wav' });
+                                    playAudioBlob(audioBlob);
+                                    if (voiceStatus) {
+                                        voiceStatus.style.display = 'block';
+                                        voiceStatus.textContent = `🎙️ "${transcriptText}" → 🧠 Reasoned with Evon 30B → 🔊 Voiced with Timbre`;
+                                    }
+                                } catch (e) {
+                                    console.warn('Audio decoding error:', e);
+                                    if (listenBtn) {
+                                        listenBtn.style.display = 'inline-block';
+                                        listenBtn.textContent = '🔊 Listen';
+                                        listenBtn.disabled = false;
+                                    }
+                                }
+                            } else {
+                                if (listenBtn) {
+                                    listenBtn.style.display = 'inline-block';
+                                    listenBtn.textContent = '🔊 Listen';
+                                    listenBtn.disabled = false;
+                                }
+                                if (voiceStatus) {
+                                    voiceStatus.style.display = 'block';
+                                    voiceStatus.textContent = `🎙️ Transcribed: "${transcriptText}" | 🧠 Reasoned with Evon 30B`;
+                                }
+                            }
+                        } else if (result.status === 'empty_transcript') {
+                            if (voiceStatus) {
+                                voiceStatus.style.display = 'block';
+                                voiceStatus.textContent = 'No speech detected in audio. Please speak clearly into your microphone.';
+                            }
+                        }
+                    } else {
+                        const errMsg = result.error || 'Could not process voice request.';
+                        if (voiceStatus) {
+                            voiceStatus.style.display = 'block';
+                            voiceStatus.textContent = errMsg;
+                        }
+                    }
+                } catch (err) {
+                    if (voiceStatus) {
+                        voiceStatus.style.display = 'block';
+                        voiceStatus.textContent = 'Network error while processing voice request.';
+                    }
+                } finally {
+                    voiceRecordBtn.disabled = false;
+                    voiceRecordIcon.textContent = '🎤';
+                    voiceRecordLabel.textContent = 'Voice';
+                }
+            }
+        });
+    }
+
+    // Helper to play synthesized audio blobs
+    function playAudioBlob(audioBlob) {
+        if (currentAudio && !currentAudio.paused) {
+            currentAudio.pause();
+            currentAudio.currentTime = 0;
+        }
+        if (currentAudioUrl) {
+            URL.revokeObjectURL(currentAudioUrl);
+            currentAudioUrl = null;
+        }
+        currentAudioUrl = URL.createObjectURL(audioBlob);
+        currentAudio = new Audio(currentAudioUrl);
+        if (listenBtn) {
+            listenBtn.style.display = 'inline-block';
+            listenBtn.disabled = false;
+            listenBtn.textContent = '⏹ Stop Audio';
+        }
+
+        currentAudio.onended = () => {
+            if (listenBtn) {
+                listenBtn.textContent = '🔊 Listen';
+                listenBtn.disabled = false;
+            }
+            if (currentAudioUrl) {
+                URL.revokeObjectURL(currentAudioUrl);
+                currentAudioUrl = null;
+            }
+            currentAudio = null;
+            if (voiceStatus) {
+                voiceStatus.textContent = 'Audio playback completed.';
+            }
+        };
+
+        currentAudio.onerror = (e) => {
+            console.error('Audio playback error:', e);
+            if (listenBtn) {
+                listenBtn.textContent = '🔊 Listen';
+                listenBtn.disabled = false;
+            }
+            if (currentAudioUrl) {
+                URL.revokeObjectURL(currentAudioUrl);
+                currentAudioUrl = null;
+            }
+            currentAudio = null;
+        };
+
+        currentAudio.play().catch(err => {
+            console.warn('Playback prevented by browser policy, click Listen to play:', err);
+            if (listenBtn) {
+                listenBtn.textContent = '🔊 Listen';
+                listenBtn.disabled = false;
+            }
+        });
+    }
+
+    // Voice Output: Listen via Gnani Timbre TTS
+    if (listenBtn) {
+        listenBtn.addEventListener('click', async function () {
+            const answerText = text.textContent.trim();
+            if (!answerText) return;
+
+            // Toggle Stop Audio if already playing
+            if (currentAudio && !currentAudio.paused) {
+                currentAudio.pause();
+                currentAudio.currentTime = 0;
+                if (currentAudioUrl) {
+                    URL.revokeObjectURL(currentAudioUrl);
+                    currentAudioUrl = null;
+                }
+                currentAudio = null;
+                listenBtn.textContent = '🔊 Listen';
+                if (voiceStatus) {
+                    voiceStatus.style.display = 'block';
+                    voiceStatus.textContent = 'Audio playback stopped.';
+                }
+                return;
+            }
+
+            listenBtn.disabled = true;
+            listenBtn.textContent = '⏳ Generating audio...';
+            if (voiceStatus) {
+                voiceStatus.style.display = 'block';
+                voiceStatus.textContent = 'Synthesizing speech with Gnani Timbre...';
+            }
+
+            try {
+                const res = await fetch('/api/ai/voice/speak', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: answerText })
+                });
+
+                if (!res.ok) {
+                    const errData = await res.json().catch(() => ({}));
+                    const errMsg = errData.error || `Speech synthesis failed (${res.status})`;
+                    if (voiceStatus) {
+                        voiceStatus.style.display = 'block';
+                        voiceStatus.textContent = 'Audio playback failed: ' + errMsg;
+                    }
+                    alert(errMsg);
+                    listenBtn.disabled = false;
+                    listenBtn.textContent = '🔊 Listen';
+                    return;
+                }
+
+                const blob = await res.blob();
+                if (blob.size === 0) {
+                    if (voiceStatus) {
+                        voiceStatus.style.display = 'block';
+                        voiceStatus.textContent = 'Audio playback failed: Empty audio stream received.';
+                    }
+                    listenBtn.disabled = false;
+                    listenBtn.textContent = '🔊 Listen';
+                    return;
+                }
+
+                const audioBlob = new Blob([blob], { type: 'audio/wav' });
+                playAudioBlob(audioBlob);
+                if (voiceStatus) {
+                    voiceStatus.style.display = 'block';
+                    voiceStatus.textContent = 'Playing audio (Gnani Timbre voice)...';
+                }
+            } catch (err) {
+                console.error('Error during speech synthesis or playback:', err);
+                listenBtn.textContent = '🔊 Listen';
+                listenBtn.disabled = false;
+                if (voiceStatus) {
+                    voiceStatus.style.display = 'block';
+                    voiceStatus.textContent = 'Audio playback failed: ' + (err.message || 'Playback blocked');
+                }
+            }
+        });
+    }
+
+    // 3. Model Retrain Trigger
+    const retrainBtn = document.getElementById('retrain-ml-btn');
+    const feedback = document.getElementById('retrain-feedback');
+    if (retrainBtn) {
+        retrainBtn.addEventListener('click', async function () {
+            retrainBtn.disabled = true;
+            retrainBtn.textContent = 'Training...';
+            try {
+                const res = await fetch('/api/ml/retrain', { method: 'POST' });
+                const data = await res.json();
+                if (res.ok) {
+                    feedback.style.display = 'block';
+                    feedback.textContent = `Model successfully retrained! Model: ${data.metadata.best_model} | Version: ${data.metadata.version}`;
+                    setTimeout(() => window.location.reload(), 1500);
+                } else {
+                    alert(data.error || 'Retraining failed.');
+                }
+            } catch (err) {
+                alert('Network error while retraining.');
+            } finally {
+                retrainBtn.disabled = false;
+                retrainBtn.textContent = '↻ Retrain ML Model';
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

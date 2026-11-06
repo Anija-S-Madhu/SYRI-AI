@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard | SYRI AI{% endblock %}
+
+{% block content %}
+
+<div class="dashboard-container">
+
+    <header class="dashboard-header">
+        <div>
+            <h1>Welcome, {{ current_user.username }}!</h1>
+            <p>Your Money. Your Intelligence.</p>
+        </div>
+
+        <div class="header-nav">
+            <a href="{{ url_for('main.transactions') }}" class="secondary-btn">Transactions</a>
+            <a href="{{ url_for('main.categories') }}" class="secondary-btn">Categories</a>
+            <a href="{{ url_for('main.budgets') }}" class="secondary-btn">Budgets</a>
+            <a href="{{ url_for('main.analytics') }}" class="secondary-btn">Analytics</a>
+            <a href="{{ url_for('main.reports') }}" class="secondary-btn">Reports</a>
+            <a href="{{ url_for('main.logout') }}" class="logout-btn">Logout</a>
+        </div>
+    </header>
+
+    <section class="dashboard-cards">
+
+        <div class="dashboard-card">
+            <h3>Total Income</h3>
+            <p>₹{{ "%.2f"|format(total_income) }}</p>
+            <span>Your total recorded income</span>
+        </div>
+
+        <div class="dashboard-card">
+            <h3>Total Expenses</h3>
+            <p>₹{{ "%.2f"|format(total_expenses) }}</p>
+            <span>Your total recorded expenses</span>
+        </div>
+
+        <div class="dashboard-card">
+            <h3>Available Balance</h3>
+            <p>₹{{ "%.2f"|format(available_balance) }}</p>
+            <span>Income minus expenses</span>
+        </div>
+
+        <div class="dashboard-card">
+            <h3>Monthly Savings</h3>
+            <p>₹{{ "%.2f"|format(monthly_savings) }}</p>
+            <span>This month's income minus expenses</span>
+        </div>
+
+    </section>
+
+    <!-- AI Financial Intelligence -->
+    <section class="dashboard-section" style="border-left: 5px solid var(--primary);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+            <h2>✦ AI Financial Intelligence (Gnani AI + Scikit-learn)</h2>
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <span class="budget-badge status-normal" style="background: rgba(156, 137, 184, 0.18); color: var(--primary-dark); border-color: var(--border);">
+                    {{ advisory.gnani_explanation.source }}
+                </span>
+                <a href="{{ url_for('main.analytics') }}" class="secondary-btn" style="padding: 5px 12px; font-size: 12px;">
+                    View Detailed Forecasts →
+                </a>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 16px;">
+            <div style="background: var(--surface-light); padding: 12px 14px; border-radius: 10px;">
+                <span style="font-size: 11px; color: var(--muted); text-transform: uppercase; font-weight: 600;">Next Month Forecast</span>
+                <strong style="display: block; font-size: 17px; color: var(--text);">₹{{ "%.2f"|format(advisory.ml_predictions.forecasted_next_month_expense) }}</strong>
+            </div>
+            <div style="background: var(--surface-light); padding: 12px 14px; border-radius: 10px;">
+                <span style="font-size: 11px; color: var(--muted); text-transform: uppercase; font-weight: 600;">Spending Behavior</span>
+                <strong style="display: block; font-size: 17px; color: var(--text);">{{ advisory.ml_predictions.spending_behavior }}</strong>
+            </div>
+            <div style="background: var(--surface-light); padding: 12px 14px; border-radius: 10px;">
+                <span style="font-size: 11px; color: var(--muted); text-transform: uppercase; font-weight: 600;">Model Engine</span>
+                <strong style="display: block; font-size: 17px; color: var(--primary-dark);">{{ advisory.ml_predictions.model_used }} Regressor</strong>
+            </div>
+        </div>
+
+        <div style="background: #FCF9FC; border: 1px solid var(--border); padding: 16px; border-radius: 10px; font-size: 13.5px; line-height: 1.7; white-space: pre-line;">
+            {{ advisory.gnani_explanation.text }}
+        </div>
+    </section>
+
+    <section class="dashboard-section">
+        <h2>Recent Transactions</h2>
+
+        {% if recent_transactions %}
+        <div class="transaction-list">
+            {% for transaction in recent_transactions %}
+            <div class="transaction-item">
+                <div>
+                    <h3>{{ transaction.description or 'Untitled Transaction' }}</h3>
+                    <span>{{ transaction.date.strftime('%d %b %Y') }}</span>
+                </div>
+
+                <div>
+                    <strong>
+                        {% if transaction.type == 'income' %}+{% else %}-{% endif %}
+                        ₹{{ "%.2f"|format(transaction.amount) }}
+                    </strong>
+                    <span>{{ transaction.type|title }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p>No transactions available yet. Start by adding your first transaction.</p>
+        {% endif %}
+
+    </section>
+
+</div>
+{% endblock %}

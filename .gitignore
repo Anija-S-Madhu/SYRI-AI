@@ -1,0 +1,64 @@
+# Byte-compiled / optimized
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+.venv/
+
+# Environment variables
+.env
+
+# Instance folder (database)
+instance/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Data files (user-uploaded / generated)
+data/*.csv
+data/*.xlsx
+
+# ML model artifacts
+ml/*.pkl
+ml/*.joblib
+
+
+# Sensitive databases and backups
+*.db
+*.sqlite
+*.sqlite3
+backups/
+
+# Temporary investigation scripts
+scratch/
+
+# Financial datasets
+data/
+
+# Python environments and cache
+__pycache__/
+*.py[cod]
+venv/
+.venv/
+
+# Secrets
+.env
+.env.*
+
+# Keep example configuration
+!.env.example
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db

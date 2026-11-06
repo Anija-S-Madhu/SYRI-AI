@@ -1,0 +1,24 @@
+{
+  "best_model": "Ridge",
+  "evaluation": {
+    "RandomForest": {
+      "mae": 2960.42,
+      "rmse": 14628.95,
+      "r2": -0.036
+    },
+    "GradientBoosting": {
+      "mae": 3066.05,
+      "rmse": 14669.8,
+      "r2": -0.0417
+    },
+    "Ridge": {
+      "mae": 2939.04,
+      "rmse": 14546.56,
+      "r2": -0.0243
+    }
+  },
+  "dataset_source": "bootstrap_augmented",
+  "sample_count": 232,
+  "trained_at": "2026-11-04T07:00:15.901610+00:00",
+  "version": "1.0.0"
+}

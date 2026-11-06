@@ -1,0 +1,276 @@
+{% extends "base.html" %}
+
+{% block title %}Transactions | SYRI AI{% endblock %}
+
+{% block content %}
+
+<div class="dashboard-container">
+
+    <header class="dashboard-header">
+        <div>
+            <h1>Transaction Management</h1>
+            <p>Track every rupee. Understand every decision.</p>
+        </div>
+
+        <div class="header-nav">
+            <a href="{{ url_for('main.dashboard') }}" class="secondary-btn">Dashboard</a>
+            <a href="{{ url_for('main.categories') }}" class="secondary-btn">Categories</a>
+            <a href="{{ url_for('main.budgets') }}" class="secondary-btn">Budgets</a>
+            <a href="{{ url_for('main.analytics') }}" class="secondary-btn">Analytics</a>
+            <a href="{{ url_for('main.reports') }}" class="secondary-btn">Reports</a>
+            <a href="{{ url_for('main.logout') }}" class="logout-btn">Logout</a>
+        </div>
+    </header>
+
+    <!-- Add Transaction -->
+
+    <section class="dashboard-section">
+
+        <h2>Add New Transaction</h2>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+        <div class="alert {{ category }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+        {% endwith %}
+
+        <form method="POST" action="{{ url_for('main.transactions') }}">
+
+            <div class="form-group">
+                <label>Transaction Type</label>
+
+                <select name="type" id="add-tx-type" required>
+                    <option value="">Select Type</option>
+                    <option value="income">Income</option>
+                    <option value="expense">Expense</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Category</label>
+
+                <select name="category_id" id="add-tx-category" required>
+                    <option value="">Select Category</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat.id }}" data-type="{{ cat.type }}">{{ cat.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Amount (₹)</label>
+
+                <input type="number" name="amount" placeholder="Enter amount" min="0.01" max="9999999999.99" step="0.01"
+                    required>
+            </div>
+
+            <div class="form-group">
+                <label>Description</label>
+
+                <input type="text" name="description" placeholder="Example: Monthly salary" maxlength="200">
+            </div>
+
+            <div class="form-group">
+                <label>Date</label>
+
+                <input type="date" name="date" value="{{ today }}" required>
+            </div>
+
+            <button type="submit" class="primary-btn">
+                + Add Transaction
+            </button>
+
+        </form>
+
+    </section>
+
+    <!-- Transaction History -->
+
+    <section class="dashboard-section">
+
+        <h2>Transaction History</h2>
+
+        <div id="dynamic-alert" class="alert" style="display: none;"></div>
+
+        {% if transactions %}
+
+        <div id="transactions-table-wrapper" style="overflow-x:auto;">
+
+            <table id="transactions-table">
+
+                <thead>
+                    <tr>
+                        <th>Description</th>
+                        <th>Category</th>
+                        <th>Type</th>
+                        <th>Date</th>
+                        <th>Amount</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody id="transactions-tbody">
+
+                    {% for transaction in transactions %}
+
+                    <tr id="tx-row-{{ transaction.id }}" data-id="{{ transaction.id }}">
+
+                        <td class="tx-cell-desc">
+                            <span class="tx-desc-text">{{ transaction.description or 'Untitled' }}</span>
+                        </td>
+
+                        <td class="tx-cell-category">
+                            <span class="muted-tag">{{ transaction.category.name if transaction.category else 'Uncategorized' }}</span>
+                        </td>
+
+                        <td class="tx-cell-type">
+                            <span class="type-pill {{ transaction.type }}">
+                                {{ transaction.type|title }}
+                            </span>
+                        </td>
+
+                        <td class="tx-cell-date" data-iso="{{ transaction.date.isoformat() }}">
+                            {{ transaction.date.strftime('%d %b %Y') }}
+                        </td>
+
+                        <td class="tx-cell-amount" data-raw="{{ "%.2f"|format(transaction.amount) }}">
+                            {% if transaction.type == 'income' %}
+                            <span style="color:#658C78; font-weight: 600;">
+                                + &#8377;{{ "%.2f"|format(transaction.amount) }}
+                            </span>
+                            {% else %}
+                            <span style="color:#C76F86; font-weight: 600;">
+                                - &#8377;{{ "%.2f"|format(transaction.amount) }}
+                            </span>
+                            {% endif %}
+                        </td>
+
+                        <td class="tx-cell-actions">
+                            <div class="table-actions">
+                                <button type="button" class="secondary-btn edit-transaction" data-id="{{ transaction.id }}"
+                                    data-category-id="{{ transaction.category_id or '' }}"
+                                    data-type="{{ transaction.type }}" data-amount="{{ "%.2f"|format(transaction.amount) }}"
+                                    data-description="{{ transaction.description or '' }}"
+                                    data-date="{{ transaction.date.isoformat() }}">
+                                    Edit
+                                </button>
+
+                                <button type="button" class="delete-transaction" data-id="{{ transaction.id }}"
+                                    data-description="{{ transaction.description or 'Untitled' }}">
+                                    Delete
+                                </button>
+                            </div>
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+        <div id="empty-state-container" class="empty-state" style="display: none;">
+            <h3>No Transactions Yet</h3>
+            <p>
+                Start managing your finances by adding
+                your first income or expense.
+            </p>
+        </div>
+
+        {% else %}
+
+        <div id="empty-state-container" class="empty-state">
+            <h3>No Transactions Yet</h3>
+            <p>
+                Start managing your finances by adding
+                your first income or expense.
+            </p>
+        </div>
+
+        {% endif %}
+
+    </section>
+
+</div>
+
+<!-- Edit Transaction Modal -->
+<div id="edit-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="edit-modal-title">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h2 id="edit-modal-title">Edit Transaction</h2>
+            <button type="button" class="modal-close-btn" id="close-edit-modal" aria-label="Close modal">&times;</button>
+        </div>
+
+        <div id="edit-modal-alert" class="alert error" style="display: none;"></div>
+
+        <form id="edit-transaction-form">
+            <input type="hidden" id="edit-tx-id">
+
+            <div class="form-group">
+                <label for="edit-tx-type">Transaction Type</label>
+                <select id="edit-tx-type" name="type" required>
+                    <option value="income">Income</option>
+                    <option value="expense">Expense</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="edit-tx-category">Category</label>
+                <select id="edit-tx-category" name="category_id">
+                    <option value="">Select Category</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat.id }}" data-type="{{ cat.type }}">{{ cat.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="edit-tx-amount">Amount (₹)</label>
+                <input type="number" id="edit-tx-amount" name="amount" placeholder="Enter amount" min="0.01" max="9999999999.99" step="0.01" required>
+            </div>
+
+            <div class="form-group">
+                <label for="edit-tx-description">Description</label>
+                <input type="text" id="edit-tx-description" name="description" placeholder="Example: Monthly salary" maxlength="200">
+            </div>
+
+            <div class="form-group">
+                <label for="edit-tx-date">Date</label>
+                <input type="date" id="edit-tx-date" name="date" required>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="secondary-btn" id="cancel-edit-btn">Cancel</button>
+                <button type="submit" class="primary-btn" id="save-edit-btn">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="delete-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="delete-modal-title">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h2 id="delete-modal-title">Delete Transaction</h2>
+            <button type="button" class="modal-close-btn" id="close-delete-modal" aria-label="Close modal">&times;</button>
+        </div>
+
+        <div id="delete-modal-alert" class="alert error" style="display: none;"></div>
+
+        <p class="modal-body-text">
+            Are you sure you want to delete <strong id="delete-tx-desc-preview">this transaction</strong>? This action cannot be undone.
+        </p>
+
+        <div class="modal-footer">
+            <button type="button" class="secondary-btn" id="cancel-delete-btn">Cancel</button>
+            <button type="button" class="delete-confirm-btn" id="confirm-delete-btn">Delete Transaction</button>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

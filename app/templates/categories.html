@@ -1,0 +1,256 @@
+{% extends "base.html" %}
+
+{% block title %}Categories | SYRI AI{% endblock %}
+
+{% block content %}
+
+<div class="dashboard-container">
+
+    <header class="dashboard-header">
+        <div>
+            <h1>Category Management</h1>
+            <p>Organize your income and expenses with intelligence.</p>
+        </div>
+
+        <div class="header-nav">
+            <a href="{{ url_for('main.dashboard') }}" class="secondary-btn">Dashboard</a>
+            <a href="{{ url_for('main.transactions') }}" class="secondary-btn">Transactions</a>
+            <a href="{{ url_for('main.budgets') }}" class="secondary-btn">Budgets</a>
+            <a href="{{ url_for('main.analytics') }}" class="secondary-btn">Analytics</a>
+            <a href="{{ url_for('main.reports') }}" class="secondary-btn">Reports</a>
+            <a href="{{ url_for('main.logout') }}" class="logout-btn">Logout</a>
+        </div>
+    </header>
+
+    <!-- Add Category Section -->
+    <section class="dashboard-section">
+        <h2>Add New Category</h2>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+        <div class="alert {{ category }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+        {% endwith %}
+
+        <div id="dynamic-category-alert" class="alert" style="display: none;"></div>
+
+        <form method="POST" action="{{ url_for('main.categories') }}" id="add-category-form">
+            <div style="display: grid; grid-template-columns: 1fr 2fr auto; gap: 15px; align-items: end;">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="cat-type-select">Category Type</label>
+                    <select id="cat-type-select" name="type" required>
+                        <option value="">Select Type</option>
+                        <option value="income">Income</option>
+                        <option value="expense">Expense</option>
+                    </select>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="cat-name-input">Category Name</label>
+                    <input type="text" id="cat-name-input" name="name" placeholder="Example: Groceries, Salary, Rent" maxlength="50" required>
+                </div>
+
+                <button type="submit" class="primary-btn" style="height: 50px;">
+                    + Add Category
+                </button>
+            </div>
+        </form>
+    </section>
+
+    <!-- Separate Categories Display (Income & Expense) -->
+    <div class="categories-grid">
+
+        <!-- Income Categories Column -->
+        <section class="dashboard-section category-column">
+            <div class="category-column-header">
+                <h2>
+                    <span class="type-pill income">Income</span>
+                    Income Categories
+                </h2>
+                <span class="category-count-badge">{{ income_categories|length }}</span>
+            </div>
+
+            {% if income_categories %}
+            <div class="category-table-wrapper">
+                <table class="category-table" id="income-categories-table">
+                    <thead>
+                        <tr>
+                            <th>Category</th>
+                            <th>Transactions</th>
+                            <th style="text-align: right;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="income-categories-tbody">
+                        {% for cat in income_categories %}
+                        <tr id="cat-row-{{ cat.id }}" data-id="{{ cat.id }}" data-type="income">
+                            <td class="cat-cell-name">
+                                <strong>{{ cat.name }}</strong>
+                            </td>
+                            <td class="cat-cell-count">
+                                <span class="muted-tag">
+                                    {{ cat.transactions|length }} transaction{{ 's' if cat.transactions|length != 1 else '' }}
+                                </span>
+                            </td>
+                            <td style="text-align: right;">
+                                <div class="table-actions">
+                                    <button type="button" class="secondary-btn edit-category"
+                                        data-id="{{ cat.id }}"
+                                        data-name="{{ cat.name }}"
+                                        data-type="{{ cat.type }}"
+                                        data-tx-count="{{ cat.transactions|length }}">
+                                        Edit
+                                    </button>
+                                    <button type="button" class="delete-category"
+                                        data-id="{{ cat.id }}"
+                                        data-name="{{ cat.name }}"
+                                        data-type="{{ cat.type }}"
+                                        data-tx-count="{{ cat.transactions|length }}">
+                                        Delete
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state" id="empty-income-state">
+                <h3>No Income Categories</h3>
+                <p>Add your first income category such as Salary, Investment, or Freelance.</p>
+            </div>
+            {% endif %}
+        </section>
+
+        <!-- Expense Categories Column -->
+        <section class="dashboard-section category-column">
+            <div class="category-column-header">
+                <h2>
+                    <span class="type-pill expense">Expense</span>
+                    Expense Categories
+                </h2>
+                <span class="category-count-badge">{{ expense_categories|length }}</span>
+            </div>
+
+            {% if expense_categories %}
+            <div class="category-table-wrapper">
+                <table class="category-table" id="expense-categories-table">
+                    <thead>
+                        <tr>
+                            <th>Category</th>
+                            <th>Transactions</th>
+                            <th style="text-align: right;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="expense-categories-tbody">
+                        {% for cat in expense_categories %}
+                        <tr id="cat-row-{{ cat.id }}" data-id="{{ cat.id }}" data-type="expense">
+                            <td class="cat-cell-name">
+                                <strong>{{ cat.name }}</strong>
+                            </td>
+                            <td class="cat-cell-count">
+                                <span class="muted-tag">
+                                    {{ cat.transactions|length }} transaction{{ 's' if cat.transactions|length != 1 else '' }}
+                                </span>
+                            </td>
+                            <td style="text-align: right;">
+                                <div class="table-actions">
+                                    <button type="button" class="secondary-btn edit-category"
+                                        data-id="{{ cat.id }}"
+                                        data-name="{{ cat.name }}"
+                                        data-type="{{ cat.type }}"
+                                        data-tx-count="{{ cat.transactions|length }}">
+                                        Edit
+                                    </button>
+                                    <button type="button" class="delete-category"
+                                        data-id="{{ cat.id }}"
+                                        data-name="{{ cat.name }}"
+                                        data-type="{{ cat.type }}"
+                                        data-tx-count="{{ cat.transactions|length }}">
+                                        Delete
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state" id="empty-expense-state">
+                <h3>No Expense Categories</h3>
+                <p>Add your first expense category such as Groceries, Utilities, Rent, or Entertainment.</p>
+            </div>
+            {% endif %}
+        </section>
+
+    </div>
+
+</div>
+
+<!-- Edit Category Modal -->
+<div id="edit-category-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="edit-category-title">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h2 id="edit-category-title">Edit Category</h2>
+            <button type="button" class="modal-close-btn" id="close-edit-category-modal" aria-label="Close modal">&times;</button>
+        </div>
+
+        <div id="edit-category-modal-alert" class="alert error" style="display: none;"></div>
+
+        <form id="edit-category-form" method="POST">
+            <input type="hidden" id="edit-cat-id">
+
+            <div class="form-group">
+                <label for="edit-cat-type">Category Type</label>
+                <select id="edit-cat-type" name="type" required>
+                    <option value="income">Income</option>
+                    <option value="expense">Expense</option>
+                </select>
+                <span id="edit-cat-type-note" style="display: none; font-size: 11px; color: var(--muted); margin-top: 4px;">
+                    Note: Cannot change type when transactions are assigned.
+                </span>
+            </div>
+
+            <div class="form-group">
+                <label for="edit-cat-name">Category Name</label>
+                <input type="text" id="edit-cat-name" name="name" maxlength="50" required>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="secondary-btn" id="cancel-edit-category-btn">Cancel</button>
+                <button type="submit" class="primary-btn" id="save-edit-category-btn">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Delete Category Confirmation Modal -->
+<div id="delete-category-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="delete-category-title">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h2 id="delete-category-title">Delete Category</h2>
+            <button type="button" class="modal-close-btn" id="close-delete-category-modal" aria-label="Close modal">&times;</button>
+        </div>
+
+        <div id="delete-category-modal-alert" class="alert error" style="display: none;"></div>
+
+        <div id="delete-category-content">
+            <p class="modal-body-text" id="delete-category-prompt">
+                Are you sure you want to delete <strong id="delete-cat-name-preview">this category</strong>?
+            </p>
+            <div id="delete-category-warning" class="alert error" style="display: none;"></div>
+        </div>
+
+        <form id="delete-category-form" method="POST">
+            <div class="modal-footer">
+                <button type="button" class="secondary-btn" id="cancel-delete-category-btn">Cancel</button>
+                <button type="button" class="delete-confirm-btn" id="confirm-delete-category-btn">Delete Category</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

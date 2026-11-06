@@ -1,0 +1,85 @@
+{
+  "version": "2.0.0",
+  "trained_at": "2026-11-05T09:17:24.520921+00:00",
+  "model1_savings": {
+    "model": "Model 1 - Savings Analysis",
+    "best_algorithm": "GradientBoosting",
+    "evaluations": {
+      "Ridge": {
+        "mae": 1477.42,
+        "rmse": 2632.27,
+        "r2": 0.9041
+      },
+      "RandomForest": {
+        "mae": 664.62,
+        "rmse": 2416.67,
+        "r2": 0.9192
+      },
+      "GradientBoosting": {
+        "mae": 664.03,
+        "rmse": 2287.67,
+        "r2": 0.9276
+      }
+    },
+    "top_features": [
+      [
+        "Groceries",
+        0.4739
+      ],
+      [
+        "Transport",
+        0.2444
+      ],
+      [
+        "Healthcare",
+        0.1394
+      ],
+      [
+        "Expense_to_Income_Ratio",
+        0.0555
+      ],
+      [
+        "Utilities",
+        0.0325
+      ]
+    ]
+  },
+  "model2_expense_forecasting": {
+    "model": "Model 2 - Expense Forecasting",
+    "best_algorithm": "RandomForest",
+    "evaluations": {
+      "Ridge": {
+        "mae": 3014.13,
+        "rmse": 6286.83,
+        "r2": -0.022
+      },
+      "RandomForest": {
+        "mae": 2838.46,
+        "rmse": 6835.21,
+        "r2": -0.2081
+      },
+      "GradientBoosting": {
+        "mae": 2939.28,
+        "rmse": 7619.95,
+        "r2": -0.5014
+      }
+    },
+    "train_period": "2015-01-01 to 2017-12-31",
+    "test_period": "2018-01-01 to 2018-12-09",
+    "train_samples": 649,
+    "test_samples": 205
+  },
+  "model3_anomaly_detection": {
+    "model": "Model 3 - Unusual Expense Anomaly Detector",
+    "algorithm": "Isolation Forest + Category IQR Bounds",
+    "contamination": 0.03,
+    "historical_anomalies_flagged": 61,
+    "total_expenses_analyzed": 2173
+  },
+  "notes": [
+    "Model 1 trained on Dataset A with strict zero-leakage feature isolation.",
+    "Model 2 trained on Dataset B with strict chronological splitting (2015-2017 train, 2018 test).",
+    "Model 3 trained on Dataset B using Isolation Forest for statistical anomaly detection.",
+    "Artificial bootstrap generator completely removed."
+  ]
+}

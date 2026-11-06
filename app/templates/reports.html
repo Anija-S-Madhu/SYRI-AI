@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}Financial Reports & Statements | SYRI AI{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+
+    <header class="dashboard-header">
+        <div>
+            <h1>Financial Reports & Statement</h1>
+            <p>Comprehensive transaction history and downloadable CSV statements</p>
+        </div>
+
+        <div class="header-nav">
+            <a href="{{ url_for('main.dashboard') }}" class="secondary-btn">Dashboard</a>
+            <a href="{{ url_for('main.transactions') }}" class="secondary-btn">Transactions</a>
+            <a href="{{ url_for('main.categories') }}" class="secondary-btn">Categories</a>
+            <a href="{{ url_for('main.budgets') }}" class="secondary-btn">Budgets</a>
+            <a href="{{ url_for('main.analytics') }}" class="secondary-btn">Analytics</a>
+            <a href="{{ url_for('main.logout') }}" class="logout-btn">Logout</a>
+        </div>
+    </header>
+
+    <!-- Overview Financial Snapshot -->
+    <section class="dashboard-cards">
+        <div class="dashboard-card">
+            <h3>Total Lifetime Income</h3>
+            <p style="color: var(--green);">₹{{ "%.2f"|format(advisory.financial_summary.historical_income) }}</p>
+            <span>Aggregated income</span>
+        </div>
+
+        <div class="dashboard-card">
+            <h3>Total Lifetime Expenses</h3>
+            <p style="color: var(--red);">₹{{ "%.2f"|format(advisory.financial_summary.historical_expense) }}</p>
+            <span>Aggregated expenses</span>
+        </div>
+
+        <div class="dashboard-card">
+            <h3>Net Available Balance</h3>
+            <p>₹{{ "%.2f"|format(advisory.financial_summary.balance) }}</p>
+            <span>Current liquid position</span>
+        </div>
+
+        <div class="dashboard-card">
+            <h3>Total Transactions</h3>
+            <p>{{ advisory.financial_summary.transaction_count }}</p>
+            <span>Archived audit entries</span>
+        </div>
+    </section>
+
+    <!-- Export & Statement Section -->
+    <section class="dashboard-section">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+            <div>
+                <h2>Complete Transaction Statement</h2>
+                <p>Auditable, user-isolated records for tax and financial planning.</p>
+            </div>
+
+            <a href="{{ url_for('main.export_csv') }}" class="primary-btn" style="padding: 12px 24px; text-decoration: none;">
+                📥 Export CSV Statement
+            </a>
+        </div>
+
+        {% if transactions %}
+        <div style="overflow-x: auto;">
+            <table class="category-table" style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="border-bottom: 2px solid var(--border); text-align: left;">
+                        <th style="padding: 12px 10px;">ID</th>
+                        <th style="padding: 12px 10px;">Date</th>
+                        <th style="padding: 12px 10px;">Description</th>
+                        <th style="padding: 12px 10px;">Category</th>
+                        <th style="padding: 12px 10px;">Type</th>
+                        <th style="padding: 12px 10px; text-align: right;">Amount (₹)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for t in transactions %}
+                    <tr style="border-bottom: 1px solid var(--border);">
+                        <td style="padding: 12px 10px; color: var(--muted); font-size: 12px;">#{{ t.id }}</td>
+                        <td style="padding: 12px 10px; font-size: 13px;">{{ t.date.strftime('%d %b %Y') }}</td>
+                        <td style="padding: 12px 10px; font-weight: 600;">{{ t.description or 'Untitled Transaction' }}</td>
+                        <td style="padding: 12px 10px;">
+                            <span class="muted-tag">{{ t.category.name if t.category else 'Uncategorized' }}</span>
+                        </td>
+                        <td style="padding: 12px 10px;">
+                            <span class="type-pill {{ t.type }}">{{ t.type|title }}</span>
+                        </td>
+                        <td style="padding: 12px 10px; text-align: right; font-weight: 700; color: {% if t.type == 'income' %}var(--green){% else %}var(--red){% endif %};">
+                            {% if t.type == 'income' %}+{% else %}-{% endif %} ₹{{ "%.2f"|format(t.amount) }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <h3>No Transactions Recorded</h3>
+            <p>Once you add transactions, your full audit trail and statements will appear here.</p>
+        </div>
+        {% endif %}
+    </section>
+
+</div>
+{% endblock %}
